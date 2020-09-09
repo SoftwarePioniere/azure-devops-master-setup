@@ -1,4 +1,4 @@
-Write-Host "aa"
+Write-Host "Imported Utils!!!"
 
 function resetError() { $global:LASTEXITCODE = 0 }
 
@@ -104,7 +104,9 @@ function createKeyVaultPolicyUpn() {
             --name $keyVaultName `
             --resource-group $resourceGroupName `
             --upn $objectid `
-            --secret-permissions get list set    
+            --secret-permissions get list set `
+            --certificate-permissions get list `
+            --key-permissions get list   
     }
     else {
 
@@ -113,7 +115,43 @@ function createKeyVaultPolicyUpn() {
             --name $keyVaultName `
             --resource-group $resourceGroupName `
             --upn $objectid `
-            --certificate-permissions backup, create, delete, deleteissuers, get, getissuers, import, list, listissuers, managecontacts, manageissuers, purge, recover, restore, setissuers, update `
+            --certificate-permissions create, delete, deleteissuers, get, getissuers, import, list, listissuers, managecontacts, manageissuers, purge, recover, restore, setissuers, update `
+            --key-permissions backup, create, decrypt, delete, encrypt, get, import, list, purge, recover, restore, sign, unwrapKey, update, verify, wrapKey `
+            --secret-permissions backup, delete, get, list, purge, recover, restore, set `
+            --storage-permissions backup, delete, deletesas, get, getsas, list, listsas, purge, recover, regeneratekey, restore, set, setsas, update
+
+    }
+    checkError
+
+    $kv = (ConvertFrom-Json -InputObject  ([System.string]::Concat($tmp)))
+    $kv | ConvertTo-Json | Write-Host
+
+    return $kv
+}
+
+
+function createKeyVaultPolicySpn() {
+    param($resourceGroupName, $keyVaultName, $objectid, [switch] $getlistset)
+    resetError
+
+    if ($getlistset) {
+        Write-Host "az keyvault set-policy: $keyVaultName $objectid getlistset"
+        $tmp = az keyvault set-policy `
+            --name $keyVaultName `
+            --resource-group $resourceGroupName `
+            --spn $objectid `
+            --secret-permissions get list set `
+            --certificate-permissions get list `
+            --key-permissions get list 
+    }
+    else {
+
+        Write-Host "az keyvault set-policy: $keyVaultName $objectid ALL"
+        $tmp = az keyvault set-policy `
+            --name $keyVaultName `
+            --resource-group $resourceGroupName `
+            --spn $objectid `
+            --certificate-permissions get, import, list, listissuers, managecontacts, manageissuers, purge, recover, restore, setissuers, update `
             --key-permissions backup, create, decrypt, delete, encrypt, get, import, list, purge, recover, restore, sign, unwrapKey, update, verify, wrapKey `
             --secret-permissions backup, delete, get, list, purge, recover, restore, set `
             --storage-permissions backup, delete, deletesas, get, getsas, list, listsas, purge, recover, regeneratekey, restore, set, setsas, update
@@ -166,25 +204,35 @@ function saveKeyVaultSecret() {
     return $kv
 }
 
+function saveServicePrincipalInKeyVault() {
+    param($keyVaultName, $sp)
+    
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-appId" -value $($sp.appId)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-password" -value $($sp.password)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-tenant" -value $($sp.tenant)
+}
+
 function createServicePrincipal() {
-    param($subscription, $prefix, $appname)
+    param($principalName, $subscriptionId)
     resetError
 
-    # create rbac sp 
-    $principalname = "az-$prefix-$subscription-$appname"
-    Write-Host $principalname
-    $tmp = (az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/$($account.id)" --name $principalname)
-    Write-Host $tmp
+    # create rbac sp   
+    Write-Host $principalName
+    # $tmp = (az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/$subscriptionId" --name $principalName --years 10)
+    $tmp = (az ad sp create-for-rbac --skip-assignment --name $principalName --years 10)
+    checkError
     
     $guid = (New-Guid).Guid
     Write-Host $guid
-    $tmp = az ad sp credential reset --name $principalname --password $guid
+    $tmp = az ad sp credential reset --name $principalName --password $guid
+    checkError
+
     Write-Host $tmp
     $principal = (ConvertFrom-Json -InputObject  ([System.string]::Concat($tmp)))
    
     # save to local file
-    $principal | ConvertTo-Json | Out-File "secret-az-$subscription-principal.json"
-    Write-Host $principal
+    $principal | ConvertTo-Json | Out-File "secret-sp-$principalName.json"
+    $principal | ConvertTo-Json | Write-Host
 
     return $principal
 }
