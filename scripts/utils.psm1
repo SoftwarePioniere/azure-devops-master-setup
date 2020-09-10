@@ -205,11 +205,13 @@ function saveKeyVaultSecret() {
 }
 
 function saveServicePrincipalInKeyVault() {
-    param($keyVaultName, $sp)
+    param($keyVaultName, $sp, $acc)
     
-    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-appId" -value $($sp.appId)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-id" -value $($sp.appId)
     saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-password" -value $($sp.password)
-    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-tenant" -value $($sp.tenant)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-tenant-id" -value $($sp.tenant)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-subscription-name" -value $($acc.name)
+    saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-subscription-id" -value $($acc.id)
 }
 
 function createServicePrincipal() {

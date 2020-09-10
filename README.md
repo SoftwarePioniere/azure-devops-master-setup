@@ -32,9 +32,43 @@ Folgendes wird per Terraform erledigt
 
 Zuerst wird eine neue Organisation im Azure DevOps angelegt.
 
-Dann wird das Skript setup-master-project.ps1 ausgeführt. Hierzu einfach mit dem richtigen Account einloggen und die Variablen Werte verändern.
+## DevOps Master Projekt anlegen
 
-Jetzt das Git Repository des neuen Projekts auschecken.
+Dann dieses Repository clonen.
+
+```
+git clone https://github.com/SoftwarePioniere/azure-devops-master-setup.git
+```
+
+Dann ein neues Git Repository Initialisieren.
+
+```powershell
+cd \repos
+md sopi2devopsmaster
+cd sopi2devopsmaster
+git init
+```
+
+Templates in das neue Repo kopieren 
+
+```powershell
+
+copy .\templates\*.* c:\repos\sopi2devopsmaster
+
+```
+Die Variablen in der Datei _master-variables.psm1_ anpassen.
+
+Dann wird das Skript _setup-master-project.ps1_ ausgeführt. Hierzu einfach mit dem richtigen Account einloggen.
+
+## DevOps Master Projekt konfigurieren
+
+Das Terraform Template _devops-master-config_ kopieren und anpassen.
+
+```powershell
+
+copy .\templates\devops-master-config1 c:\repos\sopi2devopsmaster
+
+```
 
 
 
