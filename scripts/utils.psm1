@@ -115,10 +115,10 @@ function createKeyVaultPolicyUpn() {
             --name $keyVaultName `
             --resource-group $resourceGroupName `
             --upn $objectid `
-            --certificate-permissions create, delete, deleteissuers, get, getissuers, import, list, listissuers, managecontacts, manageissuers, purge, recover, restore, setissuers, update `
-            --key-permissions backup, create, decrypt, delete, encrypt, get, import, list, purge, recover, restore, sign, unwrapKey, update, verify, wrapKey `
-            --secret-permissions backup, delete, get, list, purge, recover, restore, set `
-            --storage-permissions backup, delete, deletesas, get, getsas, list, listsas, purge, recover, regeneratekey, restore, set, setsas, update
+            --secret-permissions delete get list purge recover restore set `
+            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update `
+            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey `
+            --storage-permissions backup delete deletesas get getsas list listsas purge recover regeneratekey restore set setsas update
 
     }
     checkError
@@ -151,10 +151,10 @@ function createKeyVaultPolicySpn() {
             --name $keyVaultName `
             --resource-group $resourceGroupName `
             --spn $objectid `
-            --certificate-permissions get, import, list, listissuers, managecontacts, manageissuers, purge, recover, restore, setissuers, update `
-            --key-permissions backup, create, decrypt, delete, encrypt, get, import, list, purge, recover, restore, sign, unwrapKey, update, verify, wrapKey `
-            --secret-permissions backup, delete, get, list, purge, recover, restore, set `
-            --storage-permissions backup, delete, deletesas, get, getsas, list, listsas, purge, recover, regeneratekey, restore, set, setsas, update
+            --secret-permissions delete get list purge recover restore set `
+            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update `
+            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey `
+            --storage-permissions backup delete deletesas get getsas list listsas purge recover regeneratekey restore set setsas update
 
     }
     checkError
