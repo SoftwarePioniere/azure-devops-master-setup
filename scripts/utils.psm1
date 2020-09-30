@@ -215,12 +215,11 @@ function saveServicePrincipalInKeyVault() {
 }
 
 function createServicePrincipal() {
-    param($principalName, $subscriptionId)
+    param($principalName)
     resetError
 
     # create rbac sp   
     Write-Host $principalName
-    # $tmp = (az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/$subscriptionId" --name $principalName --years 10)
     $tmp = (az ad sp create-for-rbac --skip-assignment --name $principalName --years 10)
     checkError
     
@@ -454,4 +453,85 @@ function saveVarInGroup() {
         Write-Host $tmp
 
     # }    
+}
+
+
+
+function writeTfTemplate() {
+    $file = 'main.tf.txt'
+
+    $tmp = (az account show)
+    $account = (ConvertFrom-Json -InputObject  ([System.string]::Concat($tmp)))
+    $subscriptionId = $account.id
+
+    'locals {' | Out-File $file
+    '    backend_subscription_id   = "' + $account.id + '"' | Add-Content $file
+    '    backend_tenant_id      = "' + $account.tenantId + '"' | Add-Content $file
+    '    devops_url             = "' + $org + '"' | Add-Content $file
+    '    backend_resource_group_name     = "' + $resourceGroupName + '"' | Add-Content $file
+    '    backend_storage_account_name    = "' + $storageAccountName + '"' | Add-Content $file
+    '    backend_key                     = "devops-master-config.tfstate" ' | Add-Content $file
+    '    project_name                    = "' + $project + '"' | Add-Content $file
+    '    keyvault_name                   = "' + $keyVaultName + '"' | Add-Content $file
+    '}'  | Add-Content $file
+
+    ''  | Add-Content $file
+
+    'terraform {' | Add-Content $file
+    '   backend "azurerm" { ' | Add-Content $file
+    '       resource_group_name  = "' + $resourceGroupName + '"' | Add-Content $file
+    '       storage_account_name = "' + $storageAccountName + '"' | Add-Content $file
+    '       container_name       = "terraform"  ' | Add-Content $file
+    '       key                  = "devops-master-config.tfstate" ' | Add-Content $file
+    '   }'  | Add-Content $file
+    '}'  | Add-Content $file
+}
+
+function readLocalServicePrincipal() {
+    param($spFile)
+
+    resetError
+
+    $p = 'secret-sp-' + $spFile + '.json'
+    $tmp = Get-Content -Path $p
+    checkError
+    $sp = ConvertFrom-Json -InputObject ([System.string]::Concat($tmp))
+    checkError
+
+    $sp
+}
+
+function writeServicePrincipalToKeyVault() {
+    param($keyVaultName, $accountFile, $spFile)
+    resetError
+
+    $p = 'secret-sp-' + $spFile + '.json'
+    $tmp = Get-Content -Path $p
+    checkError
+    $sp = ConvertFrom-Json -InputObject ([System.string]::Concat($tmp))
+    checkError
+
+    $sp | ConvertTo-Json | Write-Host
+
+    $p = 'secret-account-' + $accountFile + '.json'
+    $tmp = Get-Content -Path $p
+    checkError
+    $acc = ConvertFrom-Json -InputObject ([System.string]::Concat($tmp))
+    checkError
+
+    $acc | ConvertTo-Json | Write-Host
+
+    saveServicePrincipalInKeyVault -keyVaultName $keyVaultName -sp $sp -acc $acc
+
+}
+
+function assignSpSubscriptionRole() {
+    param($sub, $sp, $role) 
+    resetError
+
+    $scope = "/subscriptions/$($sub.id)"
+
+    "az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope" | Write-Host
+    az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope
+    checkError
 }
