@@ -462,7 +462,7 @@ function writeTfTemplate() {
 
     $tmp = (az account show)
     $account = (ConvertFrom-Json -InputObject  ([System.string]::Concat($tmp)))
-    $subscriptionId = $account.id
+    # $subscriptionId = $account.id
 
     'locals {' | Out-File $file
     '    backend_subscription_id   = "' + $account.id + '"' | Add-Content $file
