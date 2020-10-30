@@ -501,6 +501,21 @@ function readLocalServicePrincipal() {
     $sp
 }
 
+
+function readLocalAccount() {
+    param($subFile)
+
+    resetError
+
+    $p = 'secret-account-' + $subFile + '.json'
+    $tmp = Get-Content -Path $p
+    checkError
+    $sp = ConvertFrom-Json -InputObject ([System.string]::Concat($tmp))
+    checkError
+
+    $sp
+}
+
 function writeServicePrincipalToKeyVault() {
     param($keyVaultName, $accountFile, $spFile)
     resetError
