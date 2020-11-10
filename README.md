@@ -1,4 +1,4 @@
-# Software Pioniere Azure DevOps Master Setup
+# Software Pioniere DevOps Master Setup
 
 Wofür dieses Projekt? In diesem Projekt werden Tools zur Verwaltung des Azure DevOps Systems bereit gestellt.
 Hier finden sich ebenfalls Templates, die in andere Projekten verwendet werden können.
@@ -11,65 +11,11 @@ Die Idee ist nun, dass in jeder Organisation wird ein DevOps Master Projekt ange
 
 Die angelegten Projekte stellen ebenfalls eigene Resourcen bereit. Vielleicht wird es auch eine Projekt Setup Pipeline geben....
 
-Das Master Projekt an sich wird mit der Azure CLI erzeugt. Hier gab es ein Versuch, dieses teilweise mit Terraform anzulegen... 
-
-Folgendes wird per Azure CLI erledigt:
-* DevOps Master Projekt anlegen
-* Azure Resourcen für Master Projekt anlegen:
-    * Resource Group
-    * Storage Account in Resource Group für den späteren Terraform State
-    * Azure KeyVault in Resource Group zum speichern des PAT und der Service Principal Secrets 
-* Speichern des AzureDevOps PAT im KeyVault
-* Anlage der Service Principals im AzureAd und speichern der Infos im KeyVault
-* Anlage der Service Connection im Master Projekt
-* Anlage der Master Pipeline für das Root Setup 
-
-Folgendes wird per Terraform erledigt
-* Anlage der Service 
-
+....
 
 ## Vorgehensweise
 
-Zuerst wird eine neue Organisation im Azure DevOps angelegt.
-
-## DevOps Master Projekt anlegen
-
-Dann dieses Repository clonen.
-
-```
-git clone https://github.com/SoftwarePioniere/azure-devops-master-setup.git
-```
-
-Dann ein neues Git Repository Initialisieren.
-
-```powershell
-cd \repos
-md sopi2devopsmaster
-cd sopi2devopsmaster
-git init
-```
-
-Templates in das neue Repo kopieren 
-
-```powershell
-
-copy .\templates\*.* c:\repos\sopi2devopsmaster
-
-```
-Die Variablen in der Datei _master-variables.psm1_ anpassen.
-
-Dann wird das Skript _setup-master-project.ps1_ ausgeführt. Hierzu einfach mit dem richtigen Account einloggen.
-
-## DevOps Master Projekt konfigurieren
-
-Das Terraform Template _devops-master-config_ kopieren und anpassen.
-
-```powershell
-
-copy .\templates\devops-master-config1 c:\repos\sopi2devopsmaster
-
-```
-
+....
 
 
 # Vorbereitungen
