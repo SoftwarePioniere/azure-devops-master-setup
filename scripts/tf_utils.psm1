@@ -1,4 +1,4 @@
-Write-Host "Imported tfutils!!!"
+Write-Host "imported tf_utils!!!"
 
 function resetError() { $global:LASTEXITCODE = 0 }
 
@@ -283,4 +283,36 @@ function addTfTfeToken() {
         category    = "terraform"
     }
     addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+}
+
+
+
+function writeTfTemplate() {
+  $file = 'main.tf.txt'
+
+  $tmp = (az account show)
+  $account = (ConvertFrom-Json -InputObject  ([System.string]::Concat($tmp)))
+  # $subscriptionId = $account.id
+
+  'locals {' | Out-File $file
+  '    backend_subscription_id   = "' + $account.id + '"' | Add-Content $file
+  '    backend_tenant_id      = "' + $account.tenantId + '"' | Add-Content $file
+  '    devops_url             = "' + $org + '"' | Add-Content $file
+  '    backend_resource_group_name     = "' + $resourceGroupName + '"' | Add-Content $file
+  '    backend_storage_account_name    = "' + $storageAccountName + '"' | Add-Content $file
+  '    backend_key                     = "devops-master-config.tfstate" ' | Add-Content $file
+  '    project_name                    = "' + $project + '"' | Add-Content $file
+  '    keyvault_name                   = "' + $keyVaultName + '"' | Add-Content $file
+  '}'  | Add-Content $file
+
+  ''  | Add-Content $file
+
+  'terraform {' | Add-Content $file
+  '   backend "azurerm" { ' | Add-Content $file
+  '       resource_group_name  = "' + $resourceGroupName + '"' | Add-Content $file
+  '       storage_account_name = "' + $storageAccountName + '"' | Add-Content $file
+  '       container_name       = "terraform"  ' | Add-Content $file
+  '       key                  = "devops-master-config.tfstate" ' | Add-Content $file
+  '   }'  | Add-Content $file
+  '}'  | Add-Content $file
 }
