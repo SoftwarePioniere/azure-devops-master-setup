@@ -241,7 +241,7 @@ function createServicePrincipal() {
   
   $guid = (New-Guid).Guid
   Write-Host $guid
-  $tmp = az ad sp credential reset --name $principalName --password $guid
+  $tmp = az ad sp credential reset --name $principalName --password $guid --years 10
   checkError
 
   Write-Host $tmp
@@ -290,3 +290,15 @@ function assignSpSubscriptionRole() {
   az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope
   checkError
 }
+
+
+
+function assignSpSubscriptionOwner() {
+  param($sub, $sp) 
+  resetError
+  
+  "az role assignment create --assignee $sp.appId --role 'Owner' --subscription $sub" | Write-Host
+  az role assignment create --assignee $sp.appId --role 'Owner' --subscription $sub
+  checkError
+}
+

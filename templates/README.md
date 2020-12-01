@@ -32,6 +32,8 @@ Permissions:
 - Azure Active Directory Graph: 
   - Directory.Read.All
 
+Grant Permissions!!
+
 Azure Ad Rollen:
 - User Administrator
 - Application Administrator
