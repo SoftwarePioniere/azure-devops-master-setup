@@ -202,13 +202,16 @@ function saveKeyVaultSecret() {
 }
 
 function saveServicePrincipalInKeyVault() {
-  param($keyVaultName, $sp, $acc)
+  param($keyVaultName, $sp, $acc, $keyvaultprefix)
   
-  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-id" -value $($sp.appId)
-  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-password" -value $($sp.password)
-  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-tenant-id" -value $($sp.tenant)
-  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-subscription-name" -value $($acc.name)
-  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($sp.name)-subscription-id" -value $($acc.id)
+  Write-Host "saveServicePrincipalInKeyVault: $keyVaultName | $keyvaultprefix"
+
+  # $sp.name
+  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($keyvaultprefix)-id" -value $($sp.appId)
+  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($keyvaultprefix)-password" -value $($sp.password)
+  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($keyvaultprefix)-tenant-id" -value $($sp.tenant)
+  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($keyvaultprefix)-subscription-name" -value $($acc.name)
+  saveKeyVaultSecret -keyVaultName $keyVaultName -secret "sp-$($keyvaultprefix)-subscription-id" -value $($acc.id)
 }
 
 
@@ -257,7 +260,7 @@ function createServicePrincipal() {
 
 
 function writeServicePrincipalToKeyVault() {
-  param($keyVaultName, $accountFile, $spFile)
+  param($keyVaultName, $accountFile, $spFile, $keyvaultprefix)
   resetError
 
   $p = 'secret-sp-' + $spFile + '.json'
@@ -276,7 +279,12 @@ function writeServicePrincipalToKeyVault() {
 
   $acc | ConvertTo-Json | Write-Host
 
-  saveServicePrincipalInKeyVault -keyVaultName $keyVaultName -sp $sp -acc $acc
+  if (!$keyvaultprefix) {
+    Write-Host "setting default prefix to sp.name"
+    $keyvaultprefix = $sp.name
+  }
+
+  saveServicePrincipalInKeyVault -keyVaultName $keyVaultName -sp $sp -acc $acc -keyvaultprefix $keyvaultprefix
 
 }
 
