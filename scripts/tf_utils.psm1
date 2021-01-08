@@ -2,8 +2,171 @@ Write-Host "imported tf_utils!!!"
 
 function resetError() { $global:LASTEXITCODE = 0 }
 
+
 function checkError() { if (-not $continueOnError) { if ($LASTEXITCODE -ne 0) { throw 'error' } } }
 
+
+function addTfServicePrincipal() {
+  param($token, $workspaceId, $sp, $prefix)
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)ARM_TENANT_ID".ToLower()
+      value       =  $sp.tenant
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)ARM_CLIENT_SECRET".ToLower()
+      value       =  $sp.password
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)ARM_CLIENT_ID".ToLower()
+      value       =  $sp.appId
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+
+}
+
+
+function addTfSubscription() {
+  param($token, $workspaceId, $sub, $prefix)
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)ARM_SUBSCRIPTION_ID".ToLower()
+      value       =  $sub.id.ToString()
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+}
+
+
+function addTfAzDoToken() {
+  param($token, $workspaceId, $pat, $prefix)
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)AZDO_TOKEN".ToLower()
+      value       =  $pat
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+}
+
+
+function addTfTfeToken() {
+  param($token, $workspaceId, $tfe, $prefix)
+
+  $attributes  =
+  @{
+      key         =  "$($prefix)TFE_TOKEN".ToLower()
+      value       =  $tfe
+      category    = "terraform"
+  }
+  addTfVar -token $token -workspaceId $workspaceId -atts $attributes
+}
+
+
+function addTfVar() {
+  param($token, $workspaceId, $atts)
+  resetError
+
+  $headers = @{
+      'Authorization' = "Bearer $token"
+      'Content-Type' = 'application/vnd.api+json'
+  }
+
+
+  $param = @{
+      Uri     = "https://app.terraform.io/api/v2/workspaces/$workspaceId/vars"
+      Method  = "Post"
+      Headers = $headers
+      Body = @{
+          data =
+          @{
+              type        = "vars"
+              attributes  = $atts
+          }
+      } | ConvertTo-Json -Depth 10
+  }
+  $res = Invoke-RestMethod @param
+  checkError
+  $res | ConvertTo-Json | Write-Host
+}
+
+function addTfVar2() {
+param($token, $workspaceId, $key, $value, $category)
+resetError
+
+$headers = @{
+  'Authorization' = "Bearer $token"
+  'Content-Type' = 'application/vnd.api+json'
+}
+
+$attributes  = @{
+    key         = $key
+    value       = $value
+    category    = $category
+}
+
+$param = @{
+    Uri     = "https://app.terraform.io/api/v2/workspaces/$workspaceId/vars"
+    Method  = "Post"
+    Headers = $headers
+    Body = @{
+        data =
+        @{
+            type        = "vars"
+            attributes  = $attributes
+        }
+    } | ConvertTo-Json -Depth 10
+}
+$res = Invoke-RestMethod @param
+checkError
+$res | ConvertTo-Json | Write-Host
+}
+
+
+function createTfWorkspace() {
+  param($org, $token, $workspace)
+  resetError
+
+  $headers = @{
+      'Authorization' = "Bearer $token"
+      'Content-Type' = 'application/vnd.api+json'
+  }
+
+  $param = @{
+      Uri     = "https://app.terraform.io/api/v2/organizations/$org/workspaces"
+      Method  = "Post"
+      Headers = $headers
+      Body = @{
+          data =
+          @{
+              type        = "workspaces"
+              attributes  =
+              @{
+                  name            =  $workspace
+                  'auto-apply'    = 'true'
+              }
+          }
+      } | ConvertTo-Json
+  }
+
+  $res = Invoke-RestMethod @param
+  checkError
+  $res   | ConvertTo-Json | Write-Host
+
+  $res
+}
 
 
 function createTfWorkspace2() {
@@ -76,45 +239,33 @@ function createTfWorkspace3() {
 }
 
 
+function deleteTfWorkspace() {
+  param($org, $token, $id)
+  resetError
 
+  $headers = @{
+      'Authorization' = "Bearer $token"
+      'Content-Type' = 'application/vnd.api+json'
+  }
 
-function createTfWorkspace() {
-    param($org, $token, $workspace)
-    resetError
+  $param = @{
+      Uri     = "https://app.terraform.io/api/v2/workspaces/$id"
+      Method  = "delete"
+      Headers = $headers
+  }
 
-    $headers = @{
-        'Authorization' = "Bearer $token"
-        'Content-Type' = 'application/vnd.api+json'
-    }
+  $res = Invoke-RestMethod @param
+  checkError
+  $res   | ConvertTo-Json | Write-Host
 
-    $param = @{
-        Uri     = "https://app.terraform.io/api/v2/organizations/$org/workspaces"
-        Method  = "Post"
-        Headers = $headers
-        Body = @{
-            data =
-            @{
-                type        = "workspaces"
-                attributes  =
-                @{
-                    name            =  $workspace
-                    'auto-apply'    = 'true'
-                }
-            }
-        } | ConvertTo-Json
-    }
-
-    $res = Invoke-RestMethod @param
-    checkError
-    $res   | ConvertTo-Json | Write-Host
-
-    $res
+  $res
 }
 
 
 function getTfWorkspace() {
     param($org, $token, $workspace)
     resetError
+    Write-Host "getTfWorkspace: $org, $workspace"
 
     $headers = @{
         'Authorization' = "Bearer $token"
@@ -129,64 +280,41 @@ function getTfWorkspace() {
 
     $res = Invoke-RestMethod @param
     checkError
-    $res   | ConvertTo-Json | Write-Host
-
+    # $res | ConvertTo-Json | Write-Host
+    Write-Host " $($res.data.id)"
+    
     $res
 }
 
 
+function getTfWorkspaceVars() {
+  param($token, $workspaceId)
+  resetError
+  Write-Host "getTfWorkspaceVars: $workspaceId"
 
+  $headers = @{
+      'Authorization' = "Bearer $token"
+      'Content-Type' = 'application/vnd.api+json'
+  }
 
-function deleteTfWorkspace() {
-    param($org, $token, $id)
-    resetError
+  $param = @{
+      Uri     = "https://app.terraform.io/api/v2/workspaces/$workspaceId/vars"
+      Method  = "Get"
+      Headers = $headers
+  }
+  $res = Invoke-RestMethod @param
+  checkError
+  # $res | ConvertTo-Json -Depth 10 | Write-Host
+ 
+  $ret = @{};
 
-    $headers = @{
-        'Authorization' = "Bearer $token"
-        'Content-Type' = 'application/vnd.api+json'
-    }
+  foreach ($v in $res.data) {
+    Write-Host "  $($v.attributes.key) "
+    $ret.Add($v.attributes.key, $v.attributes.value)
+  }
 
-    $param = @{
-        Uri     = "https://app.terraform.io/api/v2/workspaces/$id"
-        Method  = "delete"
-        Headers = $headers
-    }
-
-    $res = Invoke-RestMethod @param
-    checkError
-    $res   | ConvertTo-Json | Write-Host
-
-    $res
+  return $ret
 }
-
-
-function addTfVar() {
-    param($token, $workspaceId, $atts)
-    resetError
-
-    $headers = @{
-        'Authorization' = "Bearer $token"
-        'Content-Type' = 'application/vnd.api+json'
-    }
-
-
-    $param = @{
-        Uri     = "https://app.terraform.io/api/v2/workspaces/$workspaceId/vars"
-        Method  = "Post"
-        Headers = $headers
-        Body = @{
-            data =
-            @{
-                type        = "vars"
-                attributes  = $atts
-            }
-        } | ConvertTo-Json -Depth 10
-    }
-    $res = Invoke-RestMethod @param
-    checkError
-    $res | ConvertTo-Json | Write-Host
-}
-
 
 function updateTfVar() {
     param($token, $workspaceId, $atts)
@@ -214,77 +342,6 @@ function updateTfVar() {
     checkError
     $res| Write-Host
 }
-
-
-
-function addTfServicePrincipal() {
-    param($token, $workspaceId, $sp, $prefix)
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)ARM_TENANT_ID".ToLower()
-        value       =  $sp.tenant
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)ARM_CLIENT_SECRET".ToLower()
-        value       =  $sp.password
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)ARM_CLIENT_ID".ToLower()
-        value       =  $sp.appId
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-
-}
-
-
-
-function addTfSubscription() {
-    param($token, $workspaceId, $sub, $prefix)
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)ARM_SUBSCRIPTION_ID".ToLower()
-        value       =  $sub.id.ToString()
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-}
-
-
-function addTfAzDoToken() {
-    param($token, $workspaceId, $pat, $prefix)
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)AZDO_TOKEN".ToLower()
-        value       =  $pat
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-}
-
-function addTfTfeToken() {
-    param($token, $workspaceId, $tfe, $prefix)
-
-    $attributes  =
-    @{
-        key         =  "$($prefix)TFE_TOKEN".ToLower()
-        value       =  $tfe
-        category    = "terraform"
-    }
-    addTfVar -token $token -workspaceId $workspaceId -atts $attributes
-}
-
 
 
 function writeTfTemplate() {
@@ -316,3 +373,5 @@ function writeTfTemplate() {
   '   }'  | Add-Content $file
   '}'  | Add-Content $file
 }
+
+

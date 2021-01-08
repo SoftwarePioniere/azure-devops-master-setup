@@ -22,3 +22,4 @@ if (Get-Module -Name utils) {
 Import-Module "$PSScriptRoot\utils.psm1" -Force
 
 
+Get-Command -Module az_utils, azdo_utils, tf_utils, utils | Sort-Object -Property Name | Format-Table
