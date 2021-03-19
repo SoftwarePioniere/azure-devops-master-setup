@@ -288,7 +288,7 @@ function getTfWorkspace() {
 
 
 function getTfWorkspaceVars() {
-  param($token, $workspaceId)
+  param($token, $workspaceId, [switch] $writeEnv)
   resetError
   Write-Host "getTfWorkspaceVars: $workspaceId"
 
@@ -311,6 +311,13 @@ function getTfWorkspaceVars() {
   foreach ($v in $res.data) {
     Write-Host "  $($v.attributes.key) "
     $ret.Add($v.attributes.key, $v.attributes.value)
+
+    if ($writeEnv) {
+      Write-Host "    writing env var"
+      # $env:$($v.attributes.key) $v.attributes.value
+      Set-Item -Path "Env:$($v.attributes.key)" -Value $v.attributes.value
+      # [Environment]::SetEnvironmentVariable($v.attributes.key, $v.attributes.value, 'User')
+    }
   }
 
   return $ret

@@ -294,7 +294,7 @@ function assignSpSubscriptionRole() {
 
   $scope = "/subscriptions/$($sub.id)"
 
-  "az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope" | Write-Host
+  "   az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope" | Write-Host
   az role assignment create --assignee $sp.appId --role 'Contributor' --scope $scope
   checkError
 }
@@ -305,8 +305,21 @@ function assignSpSubscriptionOwner() {
   param($sub, $sp) 
   resetError
   
-  "az role assignment create --assignee $sp.appId --role 'Owner' --subscription $sub" | Write-Host
+  "   az role assignment create --assignee $sp.appId --role 'Owner' --subscription $sub" | Write-Host
   az role assignment create --assignee $sp.appId --role 'Owner' --subscription $sub
   checkError
 }
 
+
+function getKeyVaultSecret() {
+  param($keyVaultName, $secret)
+  resetError
+
+  Write-Host "  az keyvault secret show: $keyVaultName $secret"
+  $tmp = az keyvault secret show `
+    --vault-name $keyVaultName `
+    --name $secret -o tsv --query 'value'
+
+
+  return $tmp
+}
